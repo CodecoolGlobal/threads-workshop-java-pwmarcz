@@ -1,23 +1,57 @@
 import game.CoffeeGame;
 import game.Order;
 
-public class CoffeeShopTemplate {
+public class CoffeeShop {
     public static void main(String[] args) {
-        CoffeeShopTemplate shop = new CoffeeShopTemplate();
+        CoffeeShop shop = new CoffeeShop();
         shop.run();
     }
 
     private CoffeeGame game = new CoffeeGame();
+    private OrderQueue coffeeOrders = new OrderQueue(2);
+    private OrderQueue sandwichOrders = new OrderQueue(2);
 
     public void run() {
-        while (true) {
-            Order order = game.takeOrder();
+        for (int i = 0; i < 3; i++) {
+            new Thread(() -> this.takeOrders()).start();
+        }
+        new Thread(() -> this.makeCoffees()).start();
+        for (int i = 0; i < 5; i++) {
+            new Thread(() -> this.makeSandwiches()).start();
+        }
+    }
 
-            // Don't make coffee yet
-            // game.makeCoffee(order);
+    public void takeOrders() {
+        try {
+            while (true) {
+                Order order = game.takeOrder();
+                coffeeOrders.put(order);
+                sandwichOrders.put(order);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-            // Don't make sandwich yet
-            // game.makeSandwich(order);
+    public void makeCoffees() {
+        try {
+            while (true) {
+                Order order = coffeeOrders.take();
+                game.makeCoffee(order);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void makeSandwiches() {
+        try {
+            while (true) {
+                Order order = sandwichOrders.take();
+                game.makeSandwich(order);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
